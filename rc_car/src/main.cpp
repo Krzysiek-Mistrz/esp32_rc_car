@@ -2,80 +2,60 @@
 #include <ESP32Servo.h>
 #include "OpenSmartDecoder.h"
 
-// --- KONFIGURACJA PINÓW ---
-const int PWMA = 25;
-const int AIN1 = 26;
-const int AIN2 = 27;
-const int PWMB = 32;
-const int BIN1 = 33;
-const int BIN2 = 21;
-const int STBY = 15;
+// --- PIN CONFIGURATION (BTS7960) ---
+const int RPWM = 25;   // forward pwm
+const int LPWM = 26;   // reverse pwm
+const int EN_PIN = 15; // enable pin (combined r_en and l_en)
 
 const int SERVO_PIN = 14;
 const int RX_PIN = 19;
 
-// --- OBIEKTY ---
+// --- OBJECTS ---
 Servo steeringServo;
 OpenSmartDecoder decoder(RX_PIN);
 
-// --- ZMIENNE DIAGNOSTYCZNE ---
+// --- DIAGNOSTICS ---
 long pulseCount = 0;
 int lastRxState = -1;
 
 void setMotors(int speed) {
-    // Aktywacja sterownika
-    digitalWrite(STBY, HIGH);
+    // enable the driver
+    digitalWrite(EN_PIN, HIGH);
     
     speed = constrain(speed, -255, 255);
     
-    // Martwa strefa
+    // dead zone
     if (abs(speed) < 30) {
-        digitalWrite(AIN1, LOW);
-        digitalWrite(AIN2, LOW);
-        digitalWrite(BIN1, LOW);
-        digitalWrite(BIN2, LOW);
-        analogWrite(PWMA, 0);
-        analogWrite(PWMB, 0);
+        analogWrite(RPWM, 0);
+        analogWrite(LPWM, 0);
         return;
     }
 
-    if (speed > 0) { // Przód
-        digitalWrite(AIN1, HIGH);
-        digitalWrite(AIN2, LOW);
-        digitalWrite(BIN1, HIGH);
-        digitalWrite(BIN2, LOW);
-    } else { // Tył
-        digitalWrite(AIN1, LOW);
-        digitalWrite(AIN2, HIGH);
-        digitalWrite(BIN1, LOW);
-        digitalWrite(BIN2, HIGH);
+    if (speed > 0) { // forward
+        analogWrite(RPWM, abs(speed));
+        analogWrite(LPWM, 0);
+    } else { // reverse
+        analogWrite(RPWM, 0);
+        analogWrite(LPWM, abs(speed));
     }
-    
-    analogWrite(PWMA, abs(speed));
-    analogWrite(PWMB, abs(speed));
 }
 
 void setup() {
-    // Najpierw zabezpieczamy silniki
-    pinMode(STBY, OUTPUT);
-    digitalWrite(STBY, LOW);
+    // keep motors off at startup
+    pinMode(EN_PIN, OUTPUT);
+    digitalWrite(EN_PIN, LOW);
     
     Serial.begin(115200);
     while (!Serial);
-    // Krótkie opóźnienie na stabilizację Seriala
-    delay(10000); 
+    delay(1000); 
 
     decoder.begin();
     
     steeringServo.attach(SERVO_PIN);
-    steeringServo.write(90); // Prosto
+    steeringServo.write(90); // straight
     
-    pinMode(PWMA, OUTPUT);
-    pinMode(AIN1, OUTPUT);
-    pinMode(AIN2, OUTPUT);
-    pinMode(PWMB, OUTPUT);
-    pinMode(BIN1, OUTPUT);
-    pinMode(BIN2, OUTPUT);
+    pinMode(RPWM, OUTPUT);
+    pinMode(LPWM, OUTPUT);
     
     Serial.println("\n============================");
     Serial.println("   rc car system startup   ");
@@ -84,7 +64,6 @@ void setup() {
 
 void loop() {
     // --- step 1: pulse counter (hardware diagnostics) ---
-    // check if rx pin sees any state changes
     int s = digitalRead(RX_PIN);
     if (s != lastRxState) {
         pulseCount++;
@@ -92,7 +71,6 @@ void loop() {
     }
 
     // --- step 2: radio decoding ---
-    // this function must be called as often as possible (no delays!)
     if (decoder.update()) {
         JoystickData data = decoder.getData();
         
@@ -100,7 +78,7 @@ void loop() {
         int angle = map(data.x, 0, 1020, 135, 45);
         steeringServo.write(angle);
         
-        // motor control (throttle)
+        // drive control (throttle)
         int speed = map(data.y, 0, 1020, -255, 255);
         setMotors(speed);
         
