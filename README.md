@@ -1,41 +1,42 @@
 # RC Car ESP32 - Open-Smart Wireless Control
 
-Projekt zdalnie sterowanego samochodu opartego na **ESP32**, wykorzystujący bezprzewodowy joystick **Open-Smart** (częstotliwość 315/433MHz) oraz sterownik silników **TB6612FNG**.
+This project is an ESP32-based remote-controlled car using the Open-Smart Wireless Joystick (315/433MHz) and the TB6612FNG motor driver.
 
-## Architektura Systemu
+## System Architecture
 
-### 1. Dekodowanie sygnału (`OpenSmartDecoder`)
-Biblioteka znajdująca się w `rc_car/lib/OpenSmartDecoder` odpowiada za niskopoziomowe dekodowanie sygnału z modułu radiowego. 
-- **Metoda:** Analizuje zmiany stanów na pinie RX (Manchester encoding / Custom pulse width modulation).
-- **Dane:** Zwraca strukturę `JoystickData` zawierającą wartości osi X, Y oraz stan przycisków (zakres 0-1020).
+### 1. Signal Decoding (OpenSmartDecoder)
+The library located in 'rc_car/lib/OpenSmartDecoder' handles low-level decoding of the radio module signal.
+- Method: Analyzes state changes on the RX pin (Manchester encoding / Custom pulse width modulation).
+- Data: Returns a 'JoystickData' structure containing X, Y axis values and button states (range 0-1020).
 
-### 2. Sterowanie (`main.cpp`)
-Główny program realizuje logikę:
-- **Serwo (Skręt):** Mapuje oś X joysticka na kąt wychylenia serwa (standardowo 45° - 135°).
-- **Silniki (Napęd):** Mapuje oś Y na sygnał PWM dla sterownika TB6612FNG.
-- **Diagnostyka:** Wyświetla na Serial Monitorze aktywność pinu RX oraz przetworzone dane.
+### 2. Control Logic (main.cpp)
+The main program implements the following:
+- Steering (Servo): Maps the joystick X-axis to the servo angle (standard 45 - 135 degrees).
+- Drive (Motors): Maps the Y-axis to PWM signals for the TB6612FNG driver.
+- Diagnostics: Outputs RX pin activity and processed data to the Serial Monitor.
 
-## Diagnoza problemów z napędem (Silniki RS390)
+## Drive System Diagnosis (RS390 Motors)
 
-Jeśli Twoje silniki **RS390** tylko drgają i piszczą, problemem jest **napięcie i prąd**:
-1. **TB6612FNG jest za słaby:** Silniki RS390 przy 12V (3S) mogą pobierać prąd rzędu kilku amperów pod obciążeniem. TB6612 obsługuje tylko **1.2A na kanał**. Sterownik przegrzewa się i odcina zasilanie niemal natychmiast.
-2. **Rozwiązanie:** Należy wymienić sterownik na mocniejszy, np. **BTS7960 (43A)** lub **VNH5019**.
-3. **Piszczenie:** To dźwięk częstotliwości PWM. Silnik dostaje za mało prądu, by ruszyć, ale uzwojenia wibrują słyszalnie.
+If the RS390 motors only jitter and whine, the issue is related to voltage and current:
+1. TB6612FNG Limitation: RS390 motors at 12V (3S) can draw several amperes under load. The TB6612 only supports 1.2A per channel. The driver overheats and cuts power almost immediately.
+2. Solution: Replace the driver with a more powerful one, such as BTS7960 (43A) or VNH5019.
+3. Whining: This is the sound of the PWM frequency. The motor receives enough voltage to vibrate the windings but not enough current to overcome static friction.
 
-## Konfiguracja Pinów (ESP32)
+## Pin Configuration (ESP32)
 
-| Funkcja | Pin ESP32 |
+| Function | ESP32 Pin |
 | :--- | :--- |
-| **RX (Radio)** | 19 |
-| **Servo (Skręt)** | 14 |
-| **PWMA (Silnik L)** | 25 |
-| **AIN1 / AIN2** | 26 / 27 |
-| **PWMB (Silnik R)** | 32 |
-| **BIN1 / BIN2** | 33 / 21 |
-| **STBY (Driver)** | 15 |
+| RX (Radio) | 19 |
+| Servo (Steering) | 14 |
+| PWMA (Motor L) | 25 |
+| AIN1 / AIN2 | 26 / 27 |
+| PWMB (Motor R) | 32 |
+| BIN1 / BIN2 | 33 / 21 |
+| STBY (Driver) | 15 |
 
-## Struktura folderów
-- `rc_car/` - Główny projekt PlatformIO (kod źródłowy, biblioteki).
-- `old/` - Archiwalna dokumentacja, schematy i stare wersje oprogramowania dla ATmega8A.
+## Directory Structure
+- rc_car/ - Main PlatformIO project (source code, libraries).
+- old/ - Archival documentation, schematics, and old firmware versions for ATmega8A.
 
----
+## License
+This project is licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.

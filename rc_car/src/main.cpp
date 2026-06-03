@@ -78,40 +78,40 @@ void setup() {
     pinMode(BIN2, OUTPUT);
     
     Serial.println("\n============================");
-    Serial.println("   RC CAR SYSTEM STARTUP   ");
+    Serial.println("   rc car system startup   ");
     Serial.println("============================");
 }
 
 void loop() {
-    // --- KROK 1: LICZNIK IMPULSÓW (DIAGNOSTYKA SPRZĘTOWA) ---
-    // Sprawdzamy czy pin RX w ogóle widzi zmiany stanu
+    // --- step 1: pulse counter (hardware diagnostics) ---
+    // check if rx pin sees any state changes
     int s = digitalRead(RX_PIN);
     if (s != lastRxState) {
         pulseCount++;
         lastRxState = s;
     }
 
-    // --- KROK 2: DEKODOWANIE RADIOWE ---
-    // Ta funkcja musi być wywoływana jak najczęściej (bez delay!)
+    // --- step 2: radio decoding ---
+    // this function must be called as often as possible (no delays!)
     if (decoder.update()) {
         JoystickData data = decoder.getData();
         
-        // Sterowanie serwem (Skręt)
+        // steering (servo)
         int angle = map(data.x, 0, 1020, 135, 45);
         steeringServo.write(angle);
         
-        // Sterowanie silnikami (Gaz)
+        // motor control (throttle)
         int speed = map(data.y, 0, 1020, -255, 255);
         setMotors(speed);
         
-        Serial.printf("RX OK -> X:%4d (Ang:%d) | Y:%4d (Spd:%d) | Btn:%d\n", 
+        Serial.printf("rx ok -> x:%4d (ang:%d) | y:%4d (spd:%d) | btn:%d\n", 
                       data.x, angle, data.y, speed, data.button);
     }
 
-    // --- KROK 3: RAPORT STATUSU (Co 2 sekundy) ---
+    // --- step 3: status report (every 2 seconds) ---
     static unsigned long lastDiag = 0;
     if (millis() - lastDiag > 2000) {
-        Serial.printf("[STATUS] Aktywnosc RX: %ld zmian/2s | Uptime: %ld s\n", 
+        Serial.printf("[status] rx activity: %ld changes/2s | uptime: %ld s\n", 
                       pulseCount, millis()/1000);
         pulseCount = 0;
         lastDiag = millis();
