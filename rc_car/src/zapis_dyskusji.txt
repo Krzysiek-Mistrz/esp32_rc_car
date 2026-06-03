@@ -1,0 +1,276 @@
+oki bateria jest podlaczona i wsyztsko roniez ale tez nic nie prontuje nw
+   chyba nie dodales zadnego debugu do seriala zeby printowalo czy odbiera i
+   tez kola rowniez sie nie ruszaja. musialem tez dodac delay(10) w loopie bo
+   printoiwalo jakies glupoty pewnie za malo czasu w petli na obsluge
+   wszytskiego przy 115200
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+✦ To bardzo ważne: usuń delay(10) z pętli loop()!
+
+
+  Oto dlaczego: nasz "pancerny" dekoder działa na zasadzie mierzenia czasu
+  między impulsami (każdy bit trwa 0,5 ms). Jeśli dodasz delay(10), ESP32
+  "zasypia" na 10 milisekund i w tym czasie przelatuje obok niego ok. 20 bitów
+  danych. Dekoder traci synchronizację i nigdy nic nie odbierze.
+
+
+  Jeśli Serial wypluwa "krzaki", to najczęściej oznacza to, że:
+   1. ESP32 się restartuje (np. przez spadek napięcia, gdy silniki próbują
+      ruszyć – tzw. Brown-out).
+   2. Zakłócenia elektryczne od silników/serwa sieją po kablach.
+
+
+  Poprawiłem main.cpp. Dodałem diagnostykę, która co 2 sekundy wypisze stan
+  systemu, nawet jeśli pilot milczy. To pozwoli nam sprawdzić, czy ESP32 w ogóle
+  "żyje".
+
+
+    1 #include <Arduino.h>
+    2 #include <ESP32Servo.h>
+    3 #include "OpenSmartDecoder.h"
+    4
+    5 // --- PINY ---
+    6 const int PWMA = 25, AIN1 = 26, AIN2 = 27;
+    7 const int PWMB = 32, BIN1 = 33, BIN2 = 21;
+    8 const int STBY = 15;
+    9 const int SERVO_PIN = 14;
+   10 const int RX_PIN = 19;
+   11
+   12 Servo steeringServo;
+   13 OpenSmartDecoder decoder(RX_PIN);
+   14
+   15 // Licznik impulsów do diagnostyki
+   16 long pulseCount = 0;
+   17 int lastRxState = -1;
+   18
+   19 void setMotors(int speed) {
+   20     digitalWrite(STBY, HIGH);
+   21     speed = constrain(speed, -255, 255);
+   22
+   23     if (abs(speed) < 30) { // Większa martwa strefa dla bezpieczeństwa
+   24         digitalWrite(AIN1, LOW); digitalWrite(AIN2, LOW);
+   25         digitalWrite(BIN1, LOW); digitalWrite(BIN2, LOW);
+   26         analogWrite(PWMA, 0); analogWrite(PWMB, 0);
+   27         return;
+   28     }
+   29
+   30     if (speed > 0) {
+   31         digitalWrite(AIN1, HIGH); digitalWrite(AIN2, LOW);
+   32         digitalWrite(BIN1, HIGH); digitalWrite(BIN2, LOW);
+   33     } else {
+   34         digitalWrite(AIN1, LOW); digitalWrite(AIN2, HIGH);
+   35         digitalWrite(BIN1, LOW); digitalWrite(BIN2, HIGH);
+   36     }
+   37     analogWrite(PWMA, abs(speed));
+   38     analogWrite(PWMB, abs(speed));
+   39 }
+   40
+   41 void setup() {
+   42     // 1. Najpierw piny silników na LOW, żeby auto nie uciekło!
+   43     pinMode(STBY, OUTPUT);
+   44     digitalWrite(STBY, LOW);
+   45
+   46     delay(5000); // Skróciłem do 5s, żebyś nie musiał czekać wieczności
+   47     Serial.begin(115200);
+   48
+   49     decoder.begin();
+   50     steeringServo.attach(SERVO_PIN);
+   51     steeringServo.write(90);
+   52
+   53     pinMode(PWMA, OUTPUT); pinMode(AIN1, OUTPUT); pinMode(AIN2, OUTPUT);
+   54     pinMode(PWMB, OUTPUT); pinMode(BIN1, OUTPUT); pinMode(BIN2, OUTPUT);
+   55
+   56     Serial.println("\n=== START SYSTEMU RC ===");
+   57 }
+   58
+   59 void loop() {
+   60     // --- MONITOR SPRZĘTOWY ---
+   61     // Liczymy drgania na pinie RX, żeby wiedzieć czy odbiornik szumi
+   62     int s = digitalRead(RX_PIN);
+   63     if (s != lastRxState) {
+   64         pulseCount++;
+   65         lastRxState = s;
+   66     }
+   67
+   68     // --- DEKODER ---
+   69     // Musi być wywoływany tak szybko jak to możliwe!
+   70     if (decoder.update()) {
+   71         JoystickData data = decoder.getData();
+   72
+   73         int angle = map(data.x, 0, 1020, 135, 45);
+   74         steeringServo.write(angle);
+   75
+   76         int speed = map(data.y, 0, 1020, -255, 255);
+   77         setMotors(speed);
+   78
+   79         Serial.printf("ODEBRANO -> X:%d (Ang:%d) | Y:%d (Spd:%d)\n",
+      data.x, angle, data.y, speed);
+   80     }
+   81
+   82     // --- DIAGNOSTYKA CO 2 SEKUNDY ---
+   83     static unsigned long lastDiag = 0;
+   84     if (millis() - lastDiag > 2000) {
+   85         Serial.printf("[DIAG] Aktywnosc RX: %ld zmian | Uptime: %ld s\n",
+      pulseCount, millis()/1000);
+   86         pulseCount = 0;
+   87         lastDiag = millis();
+   88     }
+  Zaktualizowałem plik. Wgraj go i sprawdź monitor szeregowy:
+   1. Jeśli widzisz "Aktywnosc RX: 0" -> Odbiornik nie przesyła sygnału do pinu
+      19 (sprawdź kabelki).
+   2. Jeśli widzisz "Aktywnosc RX: [duża liczba]" -> Sygnał dociera, ruszaj
+      joystickiem i czekaj na "ODEBRANO".
+   3. Jeśli nadal widzisz krzaki -> Odłącz na moment zasilanie silników (VM) i
+      zostaw tylko logikę. Jeśli krzaki znikną, to znaczy, że silniki sieją
+      zakłóceniami i musimy dodać kondensatory.
+
+
+  Pamiętaj: zero delayów w loop()! Każdy delay zabija odbiór radiowy.
+
+╭──────────────────────────────────────────────────────────────────────────╮
+│ ✓  WriteFile Writing to rc_car/src/main.cpp                              │
+│                                                                          │
+│   3   #include "OpenSmartDecoder.h"                                      │
+│   4                                                                      │
+│   5   // --- KONFIGURACJA PINÓW ---                                      │
+│   6 - // TB6612FNG - Silniki                                             │
+│   6   const int PWMA = 25;                                               │
+│   7   const int AIN1 = 26;                                               │
+│   8   const int AIN2 = 27;                                               │
+│  11   const int BIN2 = 21;                                               │
+│  12   const int STBY = 15;                                               │
+│  13                                                                      │
+│  15 - // Serwo                                                           │
+│  14   const int SERVO_PIN = 14;                                          │
+│  17 -                                                                    │
+│  18 - // Odbiornik RF (D19)                                              │
+│  15   const int RX_PIN = 19;                                             │
+│  16                                                                      │
+│  17   // --- OBIEKTY ---                                                 │
+│  18   Servo steeringServo;                                               │
+│  19   OpenSmartDecoder decoder(RX_PIN);                                  │
+│  20                                                                      │
+│  25 - // --- FUNKCJE POMOCNICZE ---                                      │
+│  21 + // --- ZMIENNE DIAGNOSTYCZNE ---                                   │
+│  22 + long pulseCount = 0;                                               │
+│  23 + int lastRxState = -1;                                              │
+│  24 +                                                                    │
+│  25   void setMotors(int speed) {                                        │
+│  26       // Aktywacja sterownika                                        │
+│  27       digitalWrite(STBY, HIGH);                                      │
+│  28                                                                      │
+│  30 -     // Ograniczenie prędkości                                      │
+│  29       speed = constrain(speed, -255, 255);                           │
+│  30                                                                      │
+│  33 -     // Martwa strefa (neutral)                                     │
+│  34 -     if (abs(speed) < 20) {                                         │
+│  31 +     // Martwa strefa                                               │
+│  32 +     if (abs(speed) < 30) {                                         │
+│  33           digitalWrite(AIN1, LOW);                                   │
+│  34           digitalWrite(AIN2, LOW);                                   │
+│  35           digitalWrite(BIN1, LOW);                                   │
+│ ════════════════════════════════════════════════════════════════════════ │
+│  56   }                                                                  │
+│  57                                                                      │
+│  58   void setup() {                                                     │
+│  59 +     // Najpierw zabezpieczamy silniki                              │
+│  60 +     pinMode(STBY, OUTPUT);                                         │
+│  61 +     digitalWrite(STBY, LOW);                                       │
+│  62 +                                                                    │
+│  63 +     // Krótkie opóźnienie na stabilizację Seriala                  │
+│  64 +     delay(3000);                                                   │
+│  65       Serial.begin(115200);                                          │
+│  62 -     while (!Serial);                                               │
+│  63 -     delay(10000);                                                  │
+│  64 -                                                                    │
+│  65 -     // Inicjalizacja dekodera                                      │
+│  66 +                                                                    │
+│  67       decoder.begin();                                               │
+│  68                                                                      │
+│  68 -     // Inicjalizacja serwa                                         │
+│  69       steeringServo.attach(SERVO_PIN);                               │
+│  70 -     steeringServo.write(90); // Koła na wprost                     │
+│  70 +     steeringServo.write(90); // Prosto                             │
+│  71                                                                      │
+│  72 -     // Inicjalizacja sterownika silników                           │
+│  72       pinMode(PWMA, OUTPUT);                                         │
+│  73       pinMode(AIN1, OUTPUT);                                         │
+│  74       pinMode(AIN2, OUTPUT);                                         │
+│  75       pinMode(PWMB, OUTPUT);                                         │
+│  76       pinMode(BIN1, OUTPUT);                                         │
+│  77       pinMode(BIN2, OUTPUT);                                         │
+│  79 -     pinMode(STBY, OUTPUT);                                         │
+│  78                                                                      │
+│  81 -     digitalWrite(STBY, LOW); // Na starcie wyłączone               │
+│  82 -                                                                    │
+│  83 -     Serial.println("\n--- RC CAR SYSTEM READY ---");               │
+│  84 -     Serial.println("Sterowanie: Oś Y (Góra/Dół) - Gaz | Oś X       │
+│     (Lewo/Prawo) - Skręt");                                              │
+│  79 +     Serial.println("\n============================");              │
+│  80 +     Serial.println("   RC CAR SYSTEM STARTUP   ");                 │
+│  81 +     Serial.println("============================");                │
+│  82   }                                                                  │
+│  83                                                                      │
+│  84   void loop() {                                                      │
+│  88 -     // Sprawdzanie nowych danych z pilota (nie blokuje pętli!)     │
+│  85 +     // --- KROK 1: LICZNIK IMPULSÓW (DIAGNOSTYKA SPRZĘTOWA) ---    │
+│  86 +     // Sprawdzamy czy pin RX w ogóle widzi zmiany stanu            │
+│  87 +     int s = digitalRead(RX_PIN);                                   │
+│  88 +     if (s != lastRxState) {                                        │
+│  89 +         pulseCount++;                                              │
+│  90 +         lastRxState = s;                                           │
+│  91 +     }                                                              │
+│  92 +                                                                    │
+│  93 +     // --- KROK 2: DEKODOWANIE RADIOWE ---                         │
+│  94 +     // Ta funkcja musi być wywoływana jak najczęściej (bez delay!) │
+│  95       if (decoder.update()) {                                        │
+│  96           JoystickData data = decoder.getData();                     │
+│  97                                                                      │
+│  92 -         // --- LOGIKA SKRĘTU (Oś X) ---                            │
+│  93 -         // Joystick X: 0 (lewo) - 504 (środek) - 1020 (prawo)      │
+│  94 -         // Mapujemy na kąt serwa: 135 (lewo) - 90 (środek) - 45    │
+│     (prawo)                                                              │
+│  95 -         // (Uwaga: jeśli skręca w odwrotną stronę, zamień 135 i 45 │
+│     miejscami)                                                           │
+│  98 +         // Sterowanie serwem (Skręt)                               │
+│  99           int angle = map(data.x, 0, 1020, 135, 45);                 │
+│ 100           steeringServo.write(angle);                                │
+│ 101                                                                      │
+│  99 -         // --- LOGIKA NAPĘDU (Oś Y) ---                            │
+│ 100 -         // Joystick Y: 1020 (góra) - 520 (środek) - 0 (dół)        │
+│ 101 -         // Mapujemy na prędkość PWM: 255 (przód) - 0 (stop) - -255 │
+│     (tył)                                                                │
+│ 102 +         // Sterowanie silnikami (Gaz)                              │
+│ 103           int speed = map(data.y, 0, 1020, -255, 255);               │
+│ 104           setMotors(speed);                                          │
+│ 105                                                                      │
+│ 105 -         // Debugowanie co jakiś czas (opcjonalnie)                 │
+│ 106 -         static unsigned long lastLog = 0;                          │
+│ 107 -         if (millis() - lastLog > 200) {                            │
+│ 108 -             Serial.printf("X:%4d (Ang:%d) | Y:%4d (Spd:%d) |       │
+│     Btn:%d\n",                                                           │
+│ 109 -                           data.x, angle, data.y, speed,            │
+│     data.button);                                                        │
+│ 110 -             lastLog = millis();                                    │
+│ 111 -         }                                                          │
+│ 106 +         Serial.printf("RX OK -> X:%4d (Ang:%d) | Y:%4d (Spd:%d) |  │
+│     Btn:%d\n",                                                           │
+│ 107 +                       data.x, angle, data.y, speed, data.button);  │
+│ 108       }                                                              │
+│ 113 -     delay(10);                                                     │
+│ 109 +                                                                    │
+│ 110 +     // --- KROK 3: RAPORT STATUSU (Co 2 sekundy) ---               │
+│ 111 +     static unsigned long lastDiag = 0;                             │
+│ 112 +     if (millis() - lastDiag > 2000) {                              │
+│ 113 +         Serial.printf("[STATUS] Aktywnosc RX: %ld zmian/2s |       │
+│     Uptime: %ld s\n",                                                    │
+│ 114 +                       pulseCount, millis()/1000);                  │
+│ 115 +         pulseCount = 0;                                            │
+│ 116 +         lastDiag = millis();                                       │
+│ 117 +     }                                                              │
+│ 118   }                                                                  │
+╰──────────────────────────────────────────────────────────────────────────╯
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+ > oki thx sliczne gem servio sie rusza i sygnaly tez przechodza tylko jak daje
+   zeby jechal do p[rzodu to bardzo niewiele sie rusza do przodu a pozniej jest
+   taki pisk i to samo jak w tyl. bo te 2 tylne silniki napedzajace to sa rs390
+   a bateria to 3s zasilane z tb6612fng

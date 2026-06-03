@@ -1,0 +1,1138 @@
+\documentclass[12pt,a4paper]{article}
+
+% ─── Silnik: XeLaTeX ────────────────────────────────────────────────────────
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{polish}
+\setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{mdframed}
+
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc,
+                patterns, decorations.pathmorphing}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+% ─── Kolory ─────────────────────────────────────────────────────────────────
+\definecolor{primary}{RGB}{20, 80, 160}
+\definecolor{accent}{RGB}{200, 40, 20}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+\definecolor{darkgray}{RGB}{60, 60, 60}
+\definecolor{successgreen}{RGB}{34, 139, 34}
+
+% ─── Formatowanie sekcji ────────────────────────────────────────────────────
+\titleformat{\section}
+  {\Large\bfseries\color{primary}}{\thesection.}{0.7em}{}[\color{primary}\titlerule]
+\titleformat{\subsection}
+  {\large\bfseries\color{darkgray}}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{darkgray}}{\thesubsubsection.}{0.4em}{}
+
+% ─── Nagłówek/stopka ────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{primary}\textbf{RCDC 2026} -- Kat. RCD -- Temat T2}
+\fancyhead[R]{\small\color{darkgray}Chimera}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.2pt}
+
+% ─── Ramka inżynierska ──────────────────────────────────────────────────────
+\newmdenv[
+  linecolor=primary, linewidth=1.2pt,
+  backgroundcolor=lightgray,
+  innerleftmargin=10pt, innerrightmargin=10pt,
+  innertopmargin=8pt, innerbottommargin=8pt,
+  roundcorner=4pt
+]{engbox}
+
+\sisetup{output-decimal-marker={,}, per-mode=symbol}
+\hypersetup{colorlinks=true, linkcolor=primary, urlcolor=primary}
+
+% ════════════════════════════════════════════════════════════════════════════
+\begin{document}
+% ════════════════════════════════════════════════════════════════════════════
+
+% ─── STRONA TYTUŁOWA ────────────────────────────────────────────────────────
+\begin{titlepage}
+\centering
+\vspace*{1.2cm}
+
+{\Huge\bfseries\color{primary} RCDC 2026\par}
+\vspace{0.3cm}
+{\large\color{darkgray} Zawody Zdalnie Sterowanych Pojazdów\par}
+\vspace{1.0cm}
+\noindent\color{primary}\rule{\linewidth}{2pt}
+\vspace{0.5cm}
+
+{\LARGE\bfseries Projekt pojazdu RC zdolnego do\par
+ pokonywania przeszkód i przewyższenia\par}
+\vspace{0.3cm}
+{\large\color{accent}\textbf{Temat T2}\par}
+\vspace{0.5cm}
+\noindent\color{primary}\rule{\linewidth}{2pt}
+\vspace{1.2cm}
+
+% ─── Rysunek pojazdu (TikZ) ─────────────────────────────────────────────────
+\begin{tikzpicture}[scale=1.1]
+  \fill[gray!20] (-0.8,-0.25) rectangle (8.5,0);
+  \draw[thick]   (-0.8,0) -- (8.5,0);
+  % Podwozie
+  \fill[primary!15] (0,0.55) rectangle (5,1.75);
+  \draw[thick]      (0,0.55) rectangle (5,1.75);
+  % Koła
+  \foreach \x in {0.65, 4.35}{
+    \fill[darkgray] (\x,0) circle (0.52);
+    \fill[gray!50]  (\x,0) circle (0.22);
+  }
+  % Nadwozie
+  \fill[primary!30] (0.9,1.75) -- (1.4,2.55) -- (3.6,2.55) -- (4.1,1.75) -- cycle;
+  \draw[thick]      (0.9,1.75) -- (1.4,2.55) -- (3.6,2.55) -- (4.1,1.75) -- cycle;
+  % Rampa przednia
+  \fill[accent!25] (0,0.55) -- (-0.65,0.2) -- (0,0.2) -- cycle;
+  \draw[thick,color=accent] (0,0.55) -- (-0.65,0.2) -- (0,0.2);
+  \node[font=\scriptsize,color=accent,left] at (-0.65,0.55) {rampa};
+  % Antena
+  \draw[thick,color=accent] (3.7,2.55) -- (3.7,3.2);
+  \draw[thick,color=accent] (3.45,3.2) -- (3.95,3.2);
+  % Próg przeszkody
+  \fill[accent!45] (5.8,0) rectangle (6.15,0.92);
+  \draw[thick]     (5.8,0) rectangle (6.15,0.92);
+  \draw[<->,color=accent,thick] (6.25,0) -- (6.25,0.92)
+    node[midway,right,font=\footnotesize] {$h$};
+  % Strzałka
+  \draw[-{Stealth[length=6pt]},thick,color=successgreen,line width=1.5pt]
+    (5.1,0.8) -- (5.75,0.8);
+  % Etykiety
+  \node[font=\small,color=darkgray,below] at (2.5,-0.32) {Pojazd RC};
+  \node[font=\small,color=darkgray,below] at (6.5,-0.32) {Próg};
+\end{tikzpicture}
+
+\vspace{1.2cm}
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Zespół:}    & \texttt{Chimera} \\
+\textbf{Kategoria:} & RCD \\
+\textbf{Temat:}     & T2 -- Pokonywanie przeszkód i przewyższenia \\
+\textbf{Rok:}       & 2026 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.8cm}
+{\normalsize\color{darkgray}
+  \textbf{Paweł Kowalski} \quad\textbullet\quad
+  \textbf{Bartosz Królik} \quad\textbullet\quad
+  \textbf{Krzysztof Jura}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Koncepcja systemu}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Opis ogólny}
+
+Projekt zakłada budowę czterokołowego pojazdu RC z napędem \textbf{2WD},
+zdolnego do:
+\begin{itemize}[leftmargin=1.5em]
+  \item pokonywania pionowych progów o wysokości do \SI{40}{mm},
+  \item jazdy na pochyłościach do \SI{30}{\degree},
+  \item utrzymania stabilności na nierównym terenie.
+\end{itemize}
+
+Kluczową decyzją jest zastosowanie \textbf{sterowania różnicowego}
+(ang.~\emph{differential steering}) -- lewa i prawa strona napędzane
+niezależnie -- co eliminuje serwomechanizm skrętu, upraszcza mechanikę
+i zwiększa niezawodność. Elementem wyróżniającym jest planowane wprowadzenie \textbf{przedniej rampy
+wspomagającej wjazd na progi}.
+
+\subsection{Schemat blokowy systemu}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.1cm and 1.5cm,
+  box/.style={draw, rounded corners=3pt, fill=primary!10,
+              minimum width=3.0cm, minimum height=0.85cm,
+              align=center, font=\small},
+  motor/.style={draw, rounded corners=3pt, fill=successgreen!20,
+                minimum width=2.6cm, minimum height=0.75cm,
+                align=center, font=\small},
+  arr/.style={-{Stealth[length=5pt]}, thick, color=primary}
+]
+  \node[box] (ctrl) {Mikrokontroler\\(Arduino Nano)};
+  \node[box, above=of ctrl]        (rx)  {Odbiornik RC\\(PWM 50\,Hz)};
+  \node[box, right=2.0cm of ctrl]  (drv) {Sterownik silników\\(L298N)};
+  \node[box, below=of ctrl]        (bat) {Akumulator\\Li-Po 7{,}4\,V};
+
+  \node[motor, above right=0.4cm and 3.8cm of drv] (ml) {Silnik lewy\\(M-L)};
+  \node[motor, below right=0.4cm and 3.8cm of drv] (mr) {Silnik prawy\\(M-P)};
+
+  \draw[arr] (rx)  -- (ctrl);
+  \draw[arr] (ctrl) -- (drv) node[midway,above,font=\footnotesize] {PWM+DIR};
+  \draw[arr] (bat)  -- (ctrl);
+  \draw[arr] (bat)  -| (drv);
+  \draw[arr] (drv.east) -- ++(0.4,0) |- (ml.west);
+  \draw[arr] (drv.east) -- ++(0.4,0) |- (mr.west);
+\end{tikzpicture}
+\caption{Schemat blokowy architektury systemu sterowania}
+\label{fig:blok}
+\end{figure}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Dobór komponentów i uzasadnienie}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Silniki DC}
+
+Wybrano \textbf{dwa silniki DC} (typ TT motor), jeden na lewą stronę, jeden na prawą.
+
+\begin{table}[H]
+\centering
+\caption{Parametry nominalne silnika DC TT Motor z przekładnią 1:48}
+\begin{tabular}{lll}
+\toprule
+\textbf{Parametr} & \textbf{Wartość} & \textbf{Uwagi} \\
+\midrule
+Napięcie zasilania          & 3--9\,V            & nominalnie 6\,V \\
+Moment na wale (bez przek.) & 0{,}17\,kg$\cdot$cm & \\
+Moment na wyjściu (1:48)    & 8{,}2\,kg$\cdot$cm  & sprawność 98\% \\
+Prędkość obrotowa (wyjście) & 125\,obr/min       & przy 6\,V \\
+Pobór prądu (nominalny)     & 200\,mA            & \\
+Pobór prądu (blokada)       & 1{,}4\,A           & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Obliczenie wymaganego momentu pokonania progu}
+
+\begin{engbox}
+\textbf{Model geometryczny -- wjazd koła na próg (quasistatyczny):}
+
+Dla koła o promieniu $r$ napierającego na krawędź progu $h$ ($h \le r$):
+\begin{equation}
+  F_{\text{parcia}}
+  = \frac{m\,g\,h}{\sqrt{2rh - h^2}}
+  \label{eq:fparcia}
+\end{equation}
+
+Wymagany moment napędowy na kole:
+\begin{equation}
+  M_{\text{wymagany}} = F_{\text{parcia}} \cdot r
+  \label{eq:moment}
+\end{equation}
+\end{engbox}
+
+\noindent Dane: $m = 0{,}5$\,kg, $r = 0{,}033$\,m, $h = 0{,}040$\,m,
+$g = 9{,}81$\,m/s$^2$:
+
+\[
+  F_{\text{parcia}}
+  = \frac{0{,}5 \cdot 9{,}81 \cdot 0{,}040}{\sqrt{2 \cdot 0{,}033 \cdot 0{,}040 - 0{,}040^2}}
+  \approx 6{,}1\;\text{N}
+\]
+
+\[
+  M_{\text{wymagany}} = 6{,}1 \cdot 0{,}033 \approx 0{,}20\;\text{N$\cdot$m}
+  = 2{,}0\;\text{kg$\cdot$cm}
+\]
+
+Dostępny moment (2 silniki, każdy napędza oś):
+$2 \times 8{,}2 = 16{,}4$\,kg$\cdot$cm.
+
+\[
+  \text{Zapas bezpieczeństwa} = \frac{16{,}4}{2{,}0} \approx \mathbf{8{,}2\times}
+\]
+
+\subsection{Koła}
+
+\begin{table}[H]
+\centering
+\caption{Dobór kół}
+\begin{tabular}{lll}
+\toprule
+\textbf{Parametr} & \textbf{Wartość} & \textbf{Uzasadnienie} \\
+\midrule
+Średnica zewnętrzna & $\varnothing 66$\,mm &
+  $r = 33$\,mm $> h_\text{max} = 40$\,mm: geometria umożliwia wjazd \\
+Szerokość          & 26\,mm &
+  większa pow.\ styku -- lepsza trakcja boczna \\
+Bieżnik            & gumowy, żebrowany &
+  wysoki wsp.\ tarcia na twardej nawierzchni \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Analiza trakcji}
+
+Wsp. tarcia statycznego guma--beton: $\mu_s \approx 0{,}7$.
+
+\begin{equation}
+  F_{\text{trakcja}} = \mu_s \cdot m \cdot g
+  = 0{,}7 \cdot 0{,}5 \cdot 9{,}81 \approx 3{,}43\;\text{N}
+\end{equation}
+
+\begin{equation}
+  F_{\text{napęd}}
+  = \frac{2 \cdot M_\text{silnik}}{r}
+  = \frac{2 \cdot 0{,}080}{0{,}033}
+  \approx 4{,}8\;\text{N}
+\end{equation}
+
+Pojazd jest ograniczony \textbf{trakcją}, nie momentem -- na gładkiej
+nawierzchni koła nie będą się blokować.
+
+\subsection{Sterownik silników -- L298N}
+
+\begin{table}[H]
+\centering
+\caption{Parametry modułu L298N}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parametr} & \textbf{Wartość} \\
+\midrule
+Napięcie silników           & 7--35\,V \\
+Maks. prąd ciągły / kanał   & 2\,A \\
+Sterowanie prędkości        & PWM (ENA, ENB) \\
+Sterowanie kierunku         & IN1--IN4 (TTL 5\,V) \\
+Regulator logiki            & wbudowany 5\,V \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Źródło zasilania}
+
+\begin{table}[H]
+\centering
+\caption{Porównanie opcji zasilania}
+\begin{tabularx}{\linewidth}{lXXl}
+\toprule
+\textbf{Typ} & \textbf{Napięcie} & \textbf{Pojemność} & \textbf{Ocena} \\
+\midrule
+\textbf{Li-Po 2S 7{,}4\,V 1000\,mAh} &
+  7{,}4\,V nom. & 1000\,mAh 20C &
+  \textcolor{successgreen}{\textbf{WYBRANY}} \\
+Baterie AA ($\times 6$) &
+  9\,V (spada) & 2500\,mAh & Cięższy \\
+Li-Ion 18650 ($\times 2$) &
+  7{,}4\,V & 2000\,mAh & Dobre \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Szacowany czas działania (50\% obciążenia):
+\begin{equation}
+  t = \frac{C}{I_\text{avg}}
+    = \frac{1000\;\text{mAh}}{2 \times 0{,}5 \times 200\;\text{mA}}
+    = 5\;\text{h}
+\end{equation}
+
+\subsection{Moduł zdalnego sterowania}
+
+Do bezprzewodowej komunikacji wybrano zestaw nadajnik--odbiornik
+\textbf{FlySky FS-i6 / FS-iA6B} pracujący w paśmie 2{,}4\,GHz
+z protokołem AFHDS (ang.\ \emph{Automatic Frequency Hopping
+Digital System}).
+
+\begin{table}[H]
+\centering
+\caption{Parametry zestawu RC FlySky FS-i6 / FS-iA6B}
+\begin{tabular}{lll}
+\toprule
+\textbf{Parametr} & \textbf{Wartość} & \textbf{Uwagi} \\
+\midrule
+Częstotliwość           & 2{,}4\,GHz        & pasmo ISM \\
+Protokół                & AFHDS             & skoki częstotliwości \\
+Liczba kanałów          & 6                 & używamy 2 (gaz + skręt) \\
+Wyjście odbiornika      & PWM (50\,Hz)      & oddzielny pin / kanał \\
+Zasięg (otwarty teren)  & $\geq 500$\,m     & z anteną zewnętrzną \\
+Napięcie odbiornika     & 4{,}0--6{,}5\,V   & z regulatora 5\,V L298N \\
+Pobór prądu odbiornika  & $\leq 30$\,mA     & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Odbiornik FS-iA6B wyprowadza sygnał PWM o wypełnieniu
+1000--2000\,$\mu$s (środek: 1500\,$\mu$s) na oddzielnych pinach
+dla każdego kanału. Arduino Nano odczytuje kanały CH1 i CH2
+funkcją \texttt{pulseIn()}, mapując zakres na wartości PWM
+0--255 dla L298N:
+
+\begin{equation}
+  \text{PWM}_\text{silnik}
+  = \frac{\text{CH}_\text{odczyt} - 1000}{1000} \cdot 255
+  \label{eq:mapowanie}
+\end{equation}
+
+\noindent\textbf{Uzasadnienie wyboru FlySky:}
+Zestaw jest szeroko dostępny, tani (ok.\ 55\,zł za odbiornik),
+a protokół AFHDS minimalizuje ryzyko zakłóceń podczas
+zawodów, gdzie może pracować wiele nadajników jednocześnie.
+Alternatywą byłby moduł NRF24L01 (SPI, ok.\ 10\,zł), jednak
+wymaga on dedykowanego oprogramowania i nie oferuje gotowego
+nadajnika z joystickami.
+
+\subsection{Mikrokontroler -- Arduino Nano}
+
+Jako jednostkę obliczeniową wybrano \textbf{Arduino Nano}
+oparte na mikrokontrolerze ATmega328P. Wybor uzasadniają
+następujące cechy:
+
+\begin{table}[H]
+\centering
+\caption{Parametry Arduino Nano istotne dla projektu}
+\begin{tabular}{lll}
+\toprule
+\textbf{Parametr} & \textbf{Wartosc} & \textbf{Uzasadnienie} \\
+\midrule
+Wymiary                   & $18 \times 45$\,mm  &
+  Małe gabaryty, łatwy montaż na płytce stykowej \\
+Liczba pinow PWM          & 6 (D3,D5,D6,D9,D10,D11) &
+  Wystarczy dla ENA, ENB i ewentualnego serwa \\
+Piny cyfrowe wejsciowe    & D2, D3 (INT)        &
+  Odczyt sygnalu PWM z odbiornika RC \\
+Czestotliwosc taktowania  & 16\,MHz             &
+  Sprawna obsluga petli sterowania \\
+Zasilanie                 & 5\,V (z L298N)      &
+  Brak potrzeby osobnego regulatora \\
+Interfejs                 & USB Mini-B + UART   &
+  Wgrywanie kodu i debugowanie \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Logika sterowania:}
+Mikrokontroler wykonuje trzy zadania w petli glownej:
+\begin{enumerate}[leftmargin=1.5em]
+  \item Odczyt dwoch kanalow PWM z odbiornika RC
+        (CH1~-- predkosc, CH2~-- skret roznicowy)
+        funkcja \texttt{pulseIn()}.
+  \item Mapowanie wartosci 1000--2000\,$\mu$s
+        na wypelnienie PWM 0--255 zgodnie z
+        rownaniem~\eqref{eq:mapowanie}.
+  \item Wystawienie sygnalu PWM na piny ENA/ENB
+        oraz stanow HIGH/LOW na IN1--IN4
+        sterownika L298N.
+\end{enumerate}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Mechanika -- rozwiązania wspomagające pokonywanie trasy}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Geometria podwozia}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.2]
+  \fill[primary!10] (0,0.75) rectangle (6.0,2.0);
+  \draw[thick]      (0,0.75) rectangle (6.0,2.0);
+  \foreach \x in {0.65, 5.35}{
+    \fill[darkgray] (\x,0) circle (0.62);
+    \fill[gray!50]  (\x,0) circle (0.27);
+    \draw[thick,color=primary] (\x,0.62) -- (\x,0.75);
+  }
+  % Rampa
+  \fill[accent!25] (0,0.75) -- (-0.7,0.3) -- (0,0.3) -- cycle;
+  \draw[thick,color=accent] (0,0.75) -- (-0.7,0.3) -- (0,0.3);
+  \node[font=\scriptsize,color=accent,left] at (-0.78,0.52) {$\beta=20°$};
+  % Wymiary
+  \draw[<->,color=accent,thick] (0.65,-1.05) -- (5.35,-1.05)
+    node[midway,below,font=\footnotesize] {$L = 150$\,mm};
+  \draw[<->,color=successgreen,thick] (-1.1,0) -- (-1.1,0.75)
+    node[midway,left,font=\footnotesize] {8\,mm};
+  \draw[dashed,gray] (0.65,-0.95) -- (0.65,2.0);
+  \draw[dashed,gray] (5.35,-0.95) -- (5.35,2.0);
+\end{tikzpicture}
+\caption{Widok boczny podwozia z kluczowymi wymiarami}
+\label{fig:podwozie}
+\end{figure}
+
+\subsection{Rampa przednia}
+
+Wydrukowana z PLA rampa pod kątem $\beta = 20°$ wstępnie
+wprowadza pojazd na próg.
+
+\begin{engbox}
+\textbf{Efektywna wysokość obsługiwana przez rampę:}
+\begin{equation}
+  h_\text{rampa} = l_\text{rampy} \cdot \tan\beta
+  = 60\;\text{mm} \cdot \tan 20° \approx 22\;\text{mm}
+\end{equation}
+Koło pokonuje pozostałe:
+\[
+  h_\text{koło} = 40 - 22 = 18\;\text{mm}
+\]
+Moment wymagany z rampą:
+\[
+  F' = \frac{0{,}5 \cdot 9{,}81 \cdot 0{,}018}{\sqrt{2 \cdot 0{,}033 \cdot 0{,}018 - 0{,}018^2}}
+     \approx 3{,}3\;\text{N}
+  \;\Rightarrow\;
+  M' = 0{,}11\;\text{N$\cdot$m} = 1{,}1\;\text{kg$\cdot$cm}
+\]
+\textbf{Zapas z rampą:} $16{,}4\,/\,1{,}1 \approx 15\times$
+\end{engbox}
+
+\subsection{Zawieszenie sprężynowe (FDM)}
+
+Każde koło posiada własny wózek z pionowym skokiem 5\,mm.
+Sprężyna skręcana wydrukowana w PLA zapewnia stały kontakt
+kół z podłożem i amortyzację uderzeń.
+
+% ════════════════════════════════════════════
+\subsection{Szacowanie położenia środka ciężkości (CoG)}
+% ════════════════════════════════════════════
+
+Aby zweryfikować przyjętą w analizie stabilności wartość
+$h_\text{cg} \approx 35$\,mm, przeprowadzono obliczenia pionowego
+położenia środka ciężkości metodą ważonych momentów statycznych.
+
+\begin{table}[H]
+\centering
+\caption{Masy głównych komponentów i szacowana wysokość ich środków
+         ciężkości nad podłożem}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Komponent} & \textbf{Masa $m_i$ [g]} &
+\textbf{Wys. $h_i$ [mm]} & \textbf{Moment $m_i \cdot h_i$} \\
+\midrule
+Koła ($4 \times 35$\,g)           & 140 & 33 & 4620 \\
+Silniki TT ($2 \times 30$\,g)     & 60 & 33 & 1980 \\
+Podwozie (druk 3D PLA)            & 120 & 35 & 4200 \\
+Akumulator Li-Po                  &  70 & 40 & 2800 \\
+Elektronika (L298N + Nano + IMU)  &  55 & 45 & 2475 \\
+\midrule
+\textbf{Suma} & $\sum m_i = \mathbf{445}$ & &
+  $\sum(m_i \cdot h_i) = \mathbf{16075}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{engbox}
+\textbf{Obliczenie pionowej współrzędnej środka ciężkości:}
+\begin{equation}
+  h_\text{cg} = \frac{\sum_{i=1}^{n}(m_i \cdot h_i)}{\sum_{i=1}^{n} m_i}
+  = \frac{16075}{445} \approx 36{,}1\,\text{mm}
+\end{equation}
+\end{engbox}
+
+Uzyskany wynik $h_\text{cg} \approx 35{,}8$\,mm potwierdza przyjęte
+w sekcji~\ref{sec:wspinaczka} założenie $h_\text{cg} \approx 35$\,mm.
+Masywne elementy (silniki, akumulator) rozmieszczono możliwie nisko,
+co zapewnia wymaganą rezerwę stabilności.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Schemat połączeń elektrycznych}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Schemat i opis połączeń}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.95,transform shape]
+  % Arduino
+  \fill[primary!10] (0,0) rectangle (3.2,6.2);
+  \draw[thick,color=primary] (0,0) rectangle (3.2,6.2);
+  \node[font=\bfseries\small,color=primary] at (1.6,5.85) {Arduino Nano};
+  % Piny do L298N (strzalki w prawo)
+  \foreach \y/\lbl in {
+      4.3/{D5 (PWM-ENA)}, 3.6/{D6 (PWM-ENB)},
+      2.9/{D7 (IN1)},     2.2/{D8 (IN2)},
+      1.5/{D9 (IN3)},     0.8/{D10 (IN4)}}{
+    \node[font=\tiny,right] at (0.15,\y) {\lbl};
+    \draw[thick,color=primary] (3.2,\y) -- (4.0,\y);
+  }
+  % Piny wejsciowe z odbiornika (strzalki NIE ida do L298N)
+  \foreach \y/\lbl in {
+      5.0/{D2 (CH1 -- gaz)},
+      5.5/{D3 (CH2 -- skret)}}{
+    \node[font=\tiny,right] at (0.15,\y) {\lbl};
+  }
+  % L298N
+  \fill[accent!10] (4.0,0) rectangle (7.2,5.5);
+  \draw[thick,color=accent] (4.0,0) rectangle (7.2,5.5);
+  \node[font=\bfseries\small,color=accent] at (5.6,5.15) {L298N};
+  \foreach \y/\lbl in {
+      4.3/{ENA}, 3.6/{ENB},
+      2.9/{IN1}, 2.2/{IN2},
+      1.5/{IN3}, 0.8/{IN4}}{
+    \node[font=\tiny,right] at (4.15,\y) {\lbl};
+  }
+  % Silniki
+  \foreach \y/\lbl in {3.8/{M-L (lewa os)}, 1.4/{M-P (prawa os)}}{
+    \draw[thick,color=successgreen] (7.2,\y) -- (8.4,\y);
+    \node[font=\small,right] at (8.4,\y) {\lbl};
+  }
+  % Akumulator
+  \fill[darkgray!10] (0,-3.0) rectangle (3.2,-1.5);
+  \draw[thick] (0,-3.0) rectangle (3.2,-1.5);
+  \node[font=\bfseries\small] at (1.6,-1.82) {Li-Po 7{,}4\,V};
+  \node[font=\tiny]           at (1.6,-2.22) {1000\,mAh 20C};
+  % Zasilanie Arduino z akumulatora
+  \draw[thick,red]   (1.0,-1.5) -- (1.0,0) -- (0.5,0);
+  % Zasilanie L298N z akumulatora
+  \draw[thick,red]   (2.0,-1.5) -- (2.0,-0.5) -- (4.0,-0.5) -- (4.0,0.4);
+  % GND wspolny
+  \draw[thick,black] (2.8,-1.5) -- (2.8,-0.7) -- (4.0,-0.7) -- (4.0,0.1);
+  % Etykiety zasilania
+  \node[font=\tiny,color=red]   at (1.2,-0.7) {+7{,}4\,V};
+  \node[font=\tiny,color=black] at (3.5,-0.9) {GND};
+  % Odbiornik RC -- nad blokiem Arduino
+  \fill[primary!5]   (0,6.5) rectangle (3.2,8.0);
+  \draw[thick,color=primary] (0,6.5) rectangle (3.2,8.0);
+  \node[font=\bfseries\small,color=primary] at (1.6,7.7)  {Odbiornik RC};
+  \node[font=\tiny]                          at (1.6,7.25) {FlySky FS-iA6B};
+  \node[font=\tiny]                          at (1.6,6.85) {CH1 (gaz), CH2 (skret)};
+  % Polaczenie: odbiornik -> piny D2/D3 Arduino (sygnal PWM)
+  \draw[thick,color=darkgray,dashed]
+    (1.0,6.5) -- (1.0,6.2)
+    node[midway,right,font=\tiny,color=darkgray] {PWM CH1};
+  \draw[thick,color=darkgray,dashed]
+    (2.2,6.5) -- (2.2,6.2)
+    node[midway,right,font=\tiny,color=darkgray] {PWM CH2};
+  % Zasilanie odbiornika 5V z L298N (przez Arduino)
+  \draw[thick,color=red!70]
+    (3.2,7.25) -- (3.7,7.25) -- (3.7,-0.2) -- (4.0,-0.2);
+  \node[font=\tiny,color=red!70] at (3.95,7.0) {5\,V};
+\end{tikzpicture}
+\caption{Schemat połączeń elektrycznych}
+\label{fig:schemat}
+\end{figure}
+
+\noindent\textbf{Opis połączeń sygnałowych i zasilania:}
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{D2, D3 (wejścia cyfrowe):} odbiór sygnału PWM
+        z odbiornika RC FlySky FS-iA6B -- kanał CH1 (gaz/prędkość)
+        oraz CH2 (skręt różnicowy). Sygnał PWM o szerokości
+        impulsu 1000--2000\,$\mu$s odczytywany funkcją
+        \texttt{pulseIn()} i mapowany na wartości 0--255.
+  \item \textbf{D5, D6 (PWM):} sygnał PWM do wejść ENA i ENB
+        sterownika L298N -- regulacja prędkości odpowiednio
+        lewego i prawego silnika.
+  \item \textbf{D7--D10 (cyfrowe HIGH/LOW):} sterowanie
+        kierunkiem obrotu silników przez IN1--IN4 (mostek H).
+  \item \textbf{Zasilanie Arduino:} z wbudowanego regulatora
+        5\,V modułu L298N -- brak potrzeby osobnego zasilacza
+        dla logiki.
+  \item \textbf{Zasilanie odbiornika RC:} linia 5\,V z L298N,
+        pobór prądu $\leq 30$\,mA -- pomijalny w bilansie mocy.
+  \item \textbf{GND wspólny:} masa akumulatora, L298N i Arduino
+        połączone w jednym punkcie -- eliminuje pętle masowe.
+\end{itemize}
+
+% ────────────────────────────────────────────────────────────────────────────
+\subsection{Bilans mocy i elementy filtrujące}
+% ────────────────────────────────────────────────────────────────────────────
+
+\subsubsection{Obliczenia bilansu mocy}
+
+Akumulator Li-Po 2S o napięciu nominalnym $V_{\text{bat}} = 7{,}4$\,V
+zasila wszystkich odbiorców. Poniżej zestawiono pobory prądu
+w typowym trybie pracy (50\% obciążenia silników):
+
+\begin{table}[H]
+\centering
+\caption{Bilans poboru prądu i mocy przy $V = 7{,}4$\,V}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Odbiorca} & \textbf{Prąd [mA]} &
+\textbf{Napięcie [V]} & \textbf{Moc [mW]} \\
+\midrule
+Silnik lewy (50\% obciążenia)   & 200  & 7{,}4 & 1480 \\
+Silnik prawy (50\% obciążenia)  & 200  & 7{,}4 & 1480 \\
+L298N (straty mostek H, $\times 2$) & 100 & 7{,}4 & 740 \\
+Arduino Nano                    &  50  & 5{,}0 &  250 \\
+Odbiornik RC FS-iA6B            &  30  & 5{,}0 &  150 \\
+\midrule
+\textbf{Suma}                   & \textbf{580} & & \textbf{4100} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{engbox}
+\textbf{Weryfikacja czasu działania:}
+\begin{equation}
+  t = \frac{C \cdot V_{\text{bat}}}{P_{\text{total}}}
+    = \frac{1{,}0\;\text{Ah} \cdot 7{,}4\;\text{V}}{4{,}1\;\text{W}}
+    \approx 1{,}8\;\text{h}
+\end{equation}
+
+Uwzględniając współczynnik sprawności układu napędowego
+$\eta_{\text{L298N}} \approx 0{,}85$ (spadek napięcia na
+tranzystorach mostkowych):
+\begin{equation}
+  t_{\text{rzecz.}} = t \cdot \eta = 1{,}8 \cdot 0{,}85
+  \approx \mathbf{1{,}5\;\text{h}}
+\end{equation}
+
+Wynik znacznie przekracza wymagane minimum $45$\,min
+(test T.6), z zapasem $\approx 2\times$.
+\end{engbox}
+
+\noindent Przy szczytowym obciążeniu (oba silniki zablokowane,
+$I_{\text{blokada}} = 1{,}4$\,A każdy):
+\begin{equation}
+  I_{\text{max}} = 2 \times 1{,}4\;\text{A} + 0{,}13\;\text{A}
+  = 2{,}93\;\text{A}
+  \quad < \quad
+  I_{\text{20C}} = 20 \times 1{,}0\;\text{Ah} = 20\;\text{A}
+\end{equation}
+Akumulator o współczynniku rozładowania 20C
+dostarcza prąd szczytowy z ponad 6-krotnym zapasem --
+nie stanowi wąskiego gardła nawet przy chwilowym przeciążeniu.
+
+\subsubsection{Elementy filtrujące i zabezpieczające}
+
+W obwodzie zastosowane zostaną następujące elementy pasywne:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Kondensator elektrolityczny $470\,\mu$F / 16\,V}
+        na linii zasilania L298N -- tłumi skoki napięcia
+        przy gwałtownych zmianach obciążenia silników
+        i chroni logikę przed chwilowym spadkiem napięcia
+        (\emph{brown-out}).
+
+  \item \textbf{Kondensator ceramiczny $100\,\text{nF}$}
+        blisko pinów zasilania Arduino Nano -- filtruje
+        szybkie zakłócenia wysokoczęstotliwościowe
+        generowane przez przełączanie PWM.
+
+  \item \textbf{Kondensatory ceramiczne $100\,\text{nF}$
+        równolegle do zacisków każdego silnika} -- tłumią
+        iskrzenie szczotek, które może zakłócać sygnały
+        cyfrowe i PWM.
+
+  \item \textbf{Rezystor podciągający $10\,\text{k}\Omega$}
+        na liniach CH1 i CH2 z odbiornika RC -- stabilizuje
+        stan logiczny pinów D2/D3 w przypadku chwilowej
+        utraty sygnału (fail-safe na poziomie sprzętowym).
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Analiza zdolności wspinaczkowej}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Maksymalny kąt wzniesienia}
+\label{sec:wspinaczka}
+\begin{engbox}
+\textbf{Warunek trakcji (brak poślizgu):}
+\begin{equation}
+  \tan\alpha \leq \mu_s
+  \label{eq:trakcja}
+\end{equation}
+
+\textbf{Warunek stabilności (brak wywrócenia):}
+\begin{equation}
+  \tan\alpha \leq \frac{b/2}{h_\text{cg}}
+  \label{eq:stabilnosc}
+\end{equation}
+\end{engbox}
+
+Dane: $\mu_s = 0{,}7$, $b = 130$\,mm, $h_\text{cg} \approx 35$\,mm:
+
+\[
+  \alpha_\text{max,trakcja} = \arctan(0{,}7) \approx 35°
+\]
+\[
+  \alpha_\text{max,stab.} = \arctan(65/35) \approx 62°
+\]
+
+\textbf{Czynnik ograniczający: trakcja} -- $\alpha_\text{max} = 35°$.
+Cel projektu ($30°$) osiągnięty z zapasem $5°$.
+
+\subsection{Wykres analizy sił}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=12cm, height=7.5cm,
+  xlabel={Kąt wzniesienia $\alpha$ [$°$]},
+  ylabel={Siła [N]},
+  xmin=0, xmax=50, ymin=0, ymax=11,
+  grid=both,
+  grid style={line width=0.2pt, color=gray!25},
+  legend pos=north east,
+  legend style={font=\small, draw=gray!50},
+  tick label style={font=\small},
+  label style={font=\small\color{darkgray}}
+]
+  \addplot[thick, color=primary, domain=0:50, samples=2] {9.7};
+  \addlegendentry{Siła napędowa $F_\text{napęd} \approx 9{,}7$\,N}
+
+  \addplot[thick, color=accent, domain=0:50, samples=100]
+    {0.5*9.81*sin(x)};
+  \addlegendentry{Składowa grawitacji $mg\sin\alpha$}
+
+  \addplot[thick, color=successgreen, dashed, domain=0:50, samples=100]
+    {0.7*0.5*9.81*cos(x)};
+  \addlegendentry{Maks. siła tarcia $\mu_s mg\cos\alpha$}
+
+  \addplot[thick, color=darkgray, dotted, domain=0:50, samples=2]
+    coordinates {(35,0)(35,11)};
+  \node[font=\footnotesize,color=darkgray,anchor=west]
+    at (axis cs:35.5,10.2) {$\alpha_\text{max}=35°$};
+
+  \addplot[thick, color=accent!70, dotted, domain=0:50, samples=2]
+    coordinates {(30,0)(30,11)};
+  \node[font=\footnotesize,color=accent,anchor=west]
+    at (axis cs:30.5,9.0) {cel: 30°};
+\end{axis}
+\end{tikzpicture}
+\caption{Analiza sił podczas jazdy pod wzniesienie}
+\label{fig:sily}
+\end{figure}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Plan testów i metryki oceny}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Metodologia}
+
+Testy w trzech iteracjach wg zasady \textbf{Build -- Measure -- Learn}.
+Każdy test powtarzany \textbf{5-krotnie}; wartość miarodajna = mediana.
+
+\begin{equation}
+  \tilde{x} = x_{(3)}, \qquad
+  s = \sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(x_i - \bar{x})^2},\quad n=5
+\end{equation}
+
+\subsection{Testy szczegółowe}
+
+\begin{table}[H]
+\centering
+\caption{Plan testów z metrykami sukcesu}
+\begin{tabularx}{\linewidth}{p{0.5cm} p{3.0cm} X p{2.4cm} p{1.7cm}}
+\toprule
+\textbf{Nr} & \textbf{Nazwa} & \textbf{Procedura} &
+\textbf{Metryka} & \textbf{Cel} \\
+\midrule
+
+T.1 & Próg prosty &
+  Próg drewniany; $h$ rośnie co 5\,mm od 10\,mm do 50\,mm. &
+  Maks. $h$ [mm] & $\geq 40$ \\[3pt]
+
+T.2 & Rampa &
+  Pochyłość sklejkowa; kąt rośnie co $5°$ od $10°$ do $40°$. &
+  Maks. $\alpha$ [$°$] & $\geq 30°$ \\[3pt]
+
+T.3 & Stabilność boczna &
+  Statyczne przechylenie; pomiar kąta wywrócenia. &
+  Kąt wywrócenia & $\geq 45°$ \\[3pt]
+
+T.4 & Trasa kombinowana &
+  Próg + zakręt $180°$ + rampa + podłoże sypkie. &
+  Czas [s] & $\leq 30$\,s \\[3pt]
+
+T.5 & Zasięg RC &
+  Otwarta przestrzeń; maks. odległość komunikacji. &
+  Zasięg [m] & $\geq 15$\,m \\[3pt]
+
+T.6 & Czas pracy &
+  Jazda ciągła do rozładowania akumulatora. &
+  Czas [min] & $\geq 45$\,min \\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Schemat toru testowego}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.0]
+  \fill[gray!15] (-0.3,-0.25) rectangle (12.5,0);
+  \draw[thick]   (-0.3,0) -- (12.5,0);
+  % T.1 próg
+  \fill[accent!40] (2.0,0) rectangle (2.4,0.9);
+  \node[font=\footnotesize,above,color=accent] at (2.2,0.9) {T.1: próg};
+  % T.2 rampa
+  \fill[primary!20] (4.5,0) -- (6.5,0) -- (6.5,1.1) -- cycle;
+  \draw[thick,color=primary] (4.5,0) -- (6.5,0) -- (6.5,1.1) -- (4.5,0);
+  \node[font=\footnotesize,color=primary] at (5.5,0.5) {T.2};
+  % T.4 sypkie
+  \draw[pattern=dots, pattern color=darkgray]
+    (7.5,0) rectangle (10.0,0.35);
+  \node[font=\footnotesize,above,color=darkgray] at (8.75,0.35) {T.4: sypkie};
+  % Start/Meta
+  \draw[thick,dashed,color=successgreen] (0.0,0) -- (0.0,1.4);
+  \node[font=\footnotesize,color=successgreen,above] at (0.0,1.4) {START};
+  \draw[thick,dashed,color=accent] (12.0,0) -- (12.0,1.4);
+  \node[font=\footnotesize,color=accent,above] at (12.0,1.4) {META};
+  % Pojazd
+  \fill[primary!30] (0.3,0) rectangle (1.0,0.5);
+  \foreach \x in {0.4,0.9}{
+    \fill[darkgray] (\x,-0.01) circle (0.12);
+  }
+  \draw[-{Stealth},thick,color=primary] (1.05,0.25) -- (1.55,0.25);
+\end{tikzpicture}
+\caption{Schemat toru testowego -- widok boczny}
+\label{fig:tor}
+\end{figure}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Podział obowiązków i harmonogram}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Role w zespole}
+
+\begin{table}[H]
+\centering
+\caption{Podział ról w 3-osobowym zespole}
+\begin{tabular}{p{1.8cm} p{2.8cm} p{9cm}}
+\toprule
+\textbf{Osoba} & \textbf{Rola} & \textbf{Zakres obowiązków} \\
+\midrule
+Osoba 1 &
+  Lider / Mechanika &
+  Projekt CAD podwozia, ramp, zawieszeń; druk 3D w PLA;
+  montaż mechaniczny; dobór kół i prześwitu. \\[4pt]
+Krzysztof Jura &
+  Elektronika &
+  Schemat połączeń; okablowanie, lutowanie;
+  zabezpieczenie akumulatora (bezpiecznik 3\,A);
+  testy elektryczne. \\[4pt]
+Osoba 3 &
+  Software / Testy &
+  Kod Arduino: odczyt PWM, sterowanie różnicowe;
+  kalibracja odbiornika RC;
+  przeprowadzenie testów T.1--T.6, zapis wyników. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Harmonogram -- diagram Gantta}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.6cm, y=0.75cm]
+  \foreach \w in {1,...,6}{
+    \draw[gray!25,thin] (\w,-0.5) -- (\w,7.0);
+    \node[font=\footnotesize,color=darkgray] at (\w+0.5,7.4) {Tydz.~\w};
+  }
+  \draw[thick,->] (1,-0.4) -- (7.3,-0.4) node[right,font=\small] {czas};
+
+  \newcommand{\task}[5]{%
+    \fill[rounded corners=2pt,fill=#5]
+      (#1,#2-0.32) rectangle (#3,#2+0.32);
+    \draw[rounded corners=2pt,thin,color=darkgray]
+      (#1,#2-0.32) rectangle (#3,#2+0.32);
+    \node[font=\tiny] at ({(#1+#3)/2},#2) {#4};
+  }
+
+  \node[font=\small,color=darkgray,left] at (1,6)   {Mechanika};
+  \task{1}{6}{2.5}{Projekt CAD}{primary!45}
+  \task{2.5}{6}{4.2}{Druk 3D}{primary!65}
+  \task{4.2}{6}{5.5}{Montaż}{primary!85}
+
+  \node[font=\small,color=darkgray,left] at (1,4.5) {Elektronika};
+  \task{1}{4.5}{2.0}{Schemat}{accent!35}
+  \task{2.0}{4.5}{3.8}{Okablowanie}{accent!55}
+  \task{3.8}{4.5}{5.5}{Testy el.}{accent!75}
+
+  \node[font=\small,color=darkgray,left] at (1,3.0) {Programowanie};
+  \task{1}{3.0}{2.8}{Kod RC}{successgreen!35}
+  \task{2.8}{3.0}{4.5}{Kalibracja}{successgreen!55}
+  \task{4.5}{3.0}{6.0}{Optymalizacja}{successgreen!75}
+
+  \node[font=\small,color=darkgray,left] at (1,1.5) {Testy};
+  \task{4.5}{1.5}{5.5}{T.1--T.4}{primary!50}
+  \task{5.5}{1.5}{6.0}{T.5--T.6}{primary!75}
+
+  % Legenda
+  \fill[primary!65]      (1.0,0.15) rectangle (1.4,0.55);
+  \node[font=\footnotesize,right] at (1.45,0.35) {Mechanika};
+  \fill[accent!55]       (3.0,0.15) rectangle (3.4,0.55);
+  \node[font=\footnotesize,right] at (3.45,0.35) {Elektronika};
+  \fill[successgreen!55] (5.0,0.15) rectangle (5.4,0.55);
+  \node[font=\footnotesize,right] at (5.45,0.35) {Programowanie/Testy};
+\end{tikzpicture}
+\caption{Harmonogram Gantta realizacji projektu (6 tygodni)}
+\label{fig:gantt}
+\end{figure}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Możliwości rozbudowy i kierunki rozwoju}
+
+Poniżej opisano planowane rozszerzenia projektu, które zespół
+zamierza wdrożyć w kolejnych iteracjach po ukończeniu wersji
+bazowej. Stanowią one element wyróżniający koncepcję i pokazują
+przemyślany kierunek dalszego rozwoju pojazdu.
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Dynamiczna regulacja PWM -- kontroler PI prądu}
+
+W kolejnej iteracji planowane jest pomiarowanie prądu silników
+przez rezystor bocznikowy $R_s = 0{,}1\;\Omega$ i automatyczne
+zwiększanie wypełnienia PWM przy wzroście oporu -- imitując
+prostą kontrolę momentu. Algorytm oparty na pętli PI:
+
+\textbf{Algorytm (pętla PI):}
+\begin{equation}
+  u(t) = K_p\,e(t) + K_i\int_0^t e(\tau)\,d\tau,
+  \qquad
+  e(t) = I_\text{set} - I_\text{meas}(t)
+\end{equation}
+
+Parametry: $K_p = 0{,}8$, $K_i = 15$.
+Efekt: płynne pokonywanie progów bez nagłego zatrzymania.
+
+\subsection{Aktywna rampa}
+
+W wersji rozszerzonej planuje się sterowanie rampą przednią
+za pomocą serwomechanizmu (pin D11, biblioteka \texttt{Servo}):
+opuszczanego przed przeszkodą i podnoszonego podczas jazdy
+po płaskim terenie.
+
+Serwomechanizm -- dostępny w zestawie komponentów -- został
+celowo przeznaczony do sterowania rampą przednią zamiast do
+układu skrętnego kół, co eliminuje dodatkowy punkt awarii
+i upraszcza oprogramowanie.
+
+% ════════════════════════════════════════════
+\subsection{Planowany asystent pokonywania wzniesień (IMU)}
+
+W dalszej perspektywie zespół rozważa integrację
+6-osiowego czujnika inercyjnego \textbf{MPU6050}
+(magistrala I$^2$C, piny A4/A5, koszt ok.\ 15\,zł).
+Umożliwiłby on dwa mechanizmy: automatyczną kompensację
+grawitacji przy jeździe pod wzniesienie oraz programowe
+odcięcie napędu po przekroczeniu krytycznego kąta
+$\alpha_\text{kryt} = 50°$ -- wynikającego z analizy
+stabilności z sekcji~\ref{sec:wspinaczka}.
+Integracja nie wymaga dodatkowych pinów cyfrowych
+ani zasilania powyżej 3{,}3\,V.
+
+\subsection{Analiza ryzyka projektowego (FMEA)}
+
+W celu zapewnienia maksymalnej niezawodności pojazdu podczas zawodów, przeprowadzono analizę potencjalnych awarii mechanicznych, elektrycznych oraz programistycznych. Poniższa tabela przedstawia zidentyfikowane punkty krytyczne oraz wdrożone lub planowane środki zapobiegawcze (mitygację).
+
+\begin{table}[H]
+\centering
+\caption{Analiza potencjalnych ryzyk i środków zapobiegawczych}
+\begin{tabularx}{\linewidth}{p{3.5cm} p{3.2cm} c X}
+\toprule
+\textbf{Potencjalna awaria} & \textbf{Skutek} & \textbf{Poziom} & \textbf{Działania zapobiegawcze (Mitygacja)} \\
+\midrule
+
+Przeciążenie sterownika silników (L298N) & 
+  Przegrzanie układu, spadek napięcia lub chwilowe odcięcie napędu. & 
+  \textcolor{accent}{\textbf{Wysoki}} & 
+  Aktywne monitorowanie poboru prądu. W przypadku utrzymywania zablokowania kół programowe ograniczenie PWM. Ewentualna zmiana sterownika na model o większej wydajności (np. VNH2SP30). \\[8pt]
+
+Zawieszenie pojazdu na krawędzi (kąt rampowy) & 
+  Oderwanie kół od podłoża, całkowita utrata trakcji. & 
+  \textcolor{accent}{\textbf{Wysoki}} & 
+  Zaprojektowanie gładkiej, dolnej płyty ślizgowej (\emph{skid plate}) z materiału o niskim współczynniku tarcia, pozwalającej na ześlizgnięcie się z przeszkody pomimo małego prześwitu. \\[8pt]
+
+Utrata komunikacji radiowej (RC) & 
+  Niekontrolowana jazda pojazdu, ryzyko uszkodzenia. & 
+  \textcolor{primary}{\textbf{Średni}} & 
+  Implementacja procedury \emph{Fail-Safe} w oprogramowaniu Arduino: jeżeli czas między poprawnymi ramkami sygnału przekroczy 500\,ms, mikrokontroler sprzętowo zatrzymuje silniki (PWM = 0). \\[8pt]
+
+Odkształcenie sprężyn zawieszenia & 
+  Osiadanie pojazdu (zmniejszenie prześwitu), asymetria trakcji. & 
+  \textcolor{primary}{\textbf{Średni}} & 
+  Wydruk elementów elastycznych z materiału PETG (zamiast PLA), charakteryzującego się znacznie mniejszym zjawiskiem pełzania pod stałym obciążeniem. \\[8pt]
+
+Spadek napięcia zasilania (\emph{Brown-out}) & 
+  Zresetowanie logiki mikrokontrolera. & 
+  \textcolor{successgreen}{\textbf{Niski}} & 
+  Odseparowanie ścieżek zasilania układów wysokoprądowych i logiki. Kondensator filtrujący $470\,\mu\text{F}$ na linii 5\,V zasilającej Arduino. \\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ════════════════════════════════════════════
+\subsection{Kosztorys projektu (Bill of Materials)}
+% ════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Szacunkowy kosztorys elementów pojazdu (BOM)}
+\begin{tabularx}{\linewidth}{c X c r r p{3.2cm}}
+\toprule
+\textbf{Lp.} & \textbf{Komponent} & \textbf{Ilość} &
+\textbf{Cena jedn.} & \textbf{Koszt całk.} & \textbf{Uwagi} \\
+\midrule
+1 & Mikrokontroler Arduino Nano (klon) & 1 szt. &
+  20,00\,zł & 20,00\,zł & Logika i sterowanie \\
+2 & Sterownik silników L298N & 1 szt. &
+  15,00\,zł & 15,00\,zł & Zawiera radiator \\
+3 & Silnik DC TT Motor 1:48 & 2 szt. & 8,00 zł & 16,00 zł & Napęd różnicowy \\
+4 & Koła gumowe $\varnothing 66$\,mm & 4 szt. &
+  5,00\,zł & 20,00\,zł & Bieżnik gumowy \\
+5 & Akumulator Li-Po 2S 7{,}4\,V 1000\,mAh & 1 szt. &
+  45,00\,zł & 45,00\,zł & \\
+6 & Odbiornik RC FlySky FS-iA6 & 1 szt. &
+  55,00\,zł & 55,00\,zł & Odbiór sygnału PWM \\
+7 & Czujnik IMU MPU6050 & 1 szt. &
+  15,00\,zł & 15,00\,zł & Asystent wzniesień \\
+8 & Filament PLA/PETG & $\approx 120$\,g &
+  70,00\,zł/kg & 8,40\,zł & Druk we własnym zakresie \\
+9 & Drobnica (śruby, kable, rezystory, złącza) & kpl. &
+  20,00\,zł & 20,00\,zł & W tym bezpiecznik 3\,A \\
+\midrule
+\multicolumn{4}{r}{\textbf{Szacunkowy koszt całkowity:}} &
+  \multicolumn{2}{l}{\textcolor{primary}{\textbf{214,40\,zł}}} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Koszt całkowity rzędu \textbf{215\,zł} przy pełnym napędzie,
+zawieszeniu sprężynowym i aktywnym asystentem trakcji IMU potwierdza
+opłacalność przyjętej koncepcji.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Podsumowanie}
+% ════════════════════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Zestawienie kluczowych parametrów projektowych}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parametr} & \textbf{Wartość} \\
+\midrule
+Masa całkowita (est.)       & $\approx 500$\,g \\
+Moment łączny (4 silniki)   & 32{,}8\,kg$\cdot$cm \\
+Zapas momentu (próg 40\,mm) & $\times 8{,}2$ \\
+Zapas momentu z rampą       & $\times 15$ \\
+Maks. kąt wzniesienia       & $35°$ (limit: trakcja) \\
+Maks. wysokość progu        & 40\,mm \\
+Prześwit                    & 8\,mm \\
+Czas działania              & $\geq 45$\,min \\
+Zasięg sterowania           & $\geq 15$\,m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\bigskip
+Projekt łączy \textbf{prostotę realizacji} (dostępne komponenty,
+brak złożonej mechaniki skrętu) z \textbf{solidnym uzasadnieniem
+inżynierskim}: obliczenia momentów, analiza trakcji i stabilności,
+wykres sił, harmonogram Gantta.
+
+\end{document}
