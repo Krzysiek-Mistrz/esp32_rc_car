@@ -22,10 +22,11 @@ void setMotors(int speed) {
     // enable the driver
     digitalWrite(EN_PIN, HIGH);
     
-    speed = constrain(speed, -255, 255);
+    // limit max power to ~10% for safety (max 25 out of 255)
+    speed = constrain(speed, -25, 25);
     
     // dead zone
-    if (abs(speed) < 30) {
+    if (abs(speed) < 5) { // lowered deadzone since max speed is lower
         analogWrite(RPWM, 0);
         analogWrite(LPWM, 0);
         return;
@@ -47,7 +48,7 @@ void setup() {
     
     Serial.begin(115200);
     while (!Serial);
-    delay(1000); 
+    delay(10000); 
 
     decoder.begin();
     
